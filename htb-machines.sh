@@ -285,7 +285,7 @@ while getopts "m:i:y:d:o:s:uh" opts; do
             helpPanel
             ;;
         \?|:) 
-            echo -e "\n${RED}Error! Use ${GREEN}htb-machines -h${END} ${RED}to see the help panel.${END}\n"
+            echo -e "\n${RED}Error! Use ${END}${GREEN}htb-machines -h${END} ${RED}to see the help panel.${END}\n"
             exit 1
             ;;
     esac
