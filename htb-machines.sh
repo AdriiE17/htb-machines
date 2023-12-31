@@ -49,7 +49,8 @@ helpPanel() {
 # Returns the properties for a given machine name
 getMachineProperties() {
     local machine_name="$1"
-    machine_properties="$( ( awk "BEGIN{IGNORECA    echo "${machines_lists[@]}\n\n-------"SE = 1;}/name: \"${machine_name}\"/,/resuelta:/" bundle.js | grep -vE "id:|sku:|resuelta:" | tr -d "\"" | tr -d "," | sed 's/^ *//' ) 2>/dev/null )"
+
+    machine_properties="$( ( awk "BEGIN{IGNORECASE = 1;}/name: \"${machine_name}\"/,/resuelta:/" bundle.js | grep -vE "id:|sku:|resuelta:" | tr -d "\"" | tr -d "," | sed 's/^ *//' ) 2>/dev/null )"
     
     # Checking for possible errors with the last commands
     if [ $? -ne 0 ]; then
