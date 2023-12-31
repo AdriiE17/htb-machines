@@ -49,7 +49,7 @@ helpPanel() {
 # Returns the properties for a given machine name
 getMachineProperties() {
     local machine_name="$1"
-    machine_properties="$( ( awk "BEGIN{IGNORECASE = 1;}/name: \"${machine_name}\"/,/resuelta:/" bundle.js | grep -vE "id:|sku:|resuelta:" | tr -d "\"" | tr -d "," | sed 's/^ *//' ) 2>/dev/null )"
+    machine_properties="$( ( awk "BEGIN{IGNORECA    echo "${machines_lists[@]}\n\n-------"SE = 1;}/name: \"${machine_name}\"/,/resuelta:/" bundle.js | grep -vE "id:|sku:|resuelta:" | tr -d "\"" | tr -d "," | sed 's/^ *//' ) 2>/dev/null )"
     
     # Checking for possible errors with the last commands
     if [ $? -ne 0 ]; then
@@ -167,6 +167,7 @@ getMachinesByOS() {
 getMachinesBySkill() {
     skill="$( echo "$1" | sed 's/[A-Z]/\L&/g' )"
     local machines_list="$( grep -i "${skill}" -B 6 bundle.js | grep "name:" | awk '{print $NF}' | tr -d '"' | tr -d ',' | column )"
+    
     # If the difficulty type does not exist or there are not machines for that difficulty type, then exit
     if [ ! "${machines_list}" ]; then
         echo -e "${RED}Skill${END} ${GRAY}${skill}${END}${RED} is not valid.${END}"
@@ -179,30 +180,26 @@ getMachinesBySkill() {
 
 }
 
-# To use this function, each argument must be like property_type:property_value (e.g. os:linux)
 getMachinesByMultipleProperties() {
 
-    for property in "$@"; do
+    function_list=("$@")
 
-        property_type="$( echo "$property" | cut -d ':' -f 1 )"
-        property_value="$( echo "$property" | cut -d ':' -f 2 )"
+    for function in "${function_list[@]}"; do
+        list=$( ${function} )
 
-        if [ "${property_type}" = "difficulty" ]; then
-            machines_lists=("${machines_lists[@]}" "$( getMachinesByDifficulty "${property_value}" )")
-        elif [ "${property_type}" = "os" ]; then
-            machines_lists=("${machines_lists[@]}" "$( getMachinesByOS "${property_value}" )")
-        elif [ "${property_type}" = "skill" ]; then
-            machines_lists=("${machines_lists[@]}" "$( getMachinesBySkill "${property_value}" )")
-        else
-            echo "${RED}Error! Property not found!${END}"
+        # This will output all errors
+        if [ $? -eq 1 ]; then
+            echo "${list}"
+            found_error=1
         fi
 
-        if [ $? -ne 0 ]; then
-            echo "${machines_lists[-1]}"
-            exit 1
-        fi
-
+        machines_lists=("${machines_lists[@]}" "${list}")
     done
+
+    # If at least one error is found, exit
+    if [ $found_error ]; then
+        exit 1
+    fi
 
     declare -i count=0
     for list in "${machines_lists[@]}"; do 
@@ -300,8 +297,8 @@ if [ $machine_filtering -eq 2 ]; then
     getMachinesByOS "${machine_os}" 
 fi
 
-if [ $machine_filtering -eq 3 ]; then 
-    getMachinesByMultipleProperties "difficulty:${machine_difficulty}" "os:${machine_os}"
+if [ $machine_filtering -eq 3 ]; then
+    getMachinesByMultipleProperties "getMachinesByDifficulty ${machine_difficulty}" "getMachinesByOS ${machine_os}"
 fi
 
 if [ $machine_filtering -eq 4 ]; then
@@ -309,14 +306,14 @@ if [ $machine_filtering -eq 4 ]; then
 fi
 
 if [ $machine_filtering -eq 5 ]; then 
-    getMachinesByMultipleProperties "difficulty:${machine_difficulty}" "skill:${skill}"
+    getMachinesByMultipleProperties "getMachinesByDifficulty ${machine_difficulty}" "getMachinesBySkill ${skill}"
 fi
 
 if [ $machine_filtering -eq 6 ]; then 
-    getMachinesByMultipleProperties "os:${machine_os}" "skill:${skill}"
+    getMachinesByMultipleProperties "getMachinesByOS ${machine_os}" "getMachinesBySkill ${skill}"
 fi
 
 if [ $machine_filtering -eq 7 ]; then 
-    getMachinesByMultipleProperties "difficulty:${machine_difficulty}" "os:${machine_os}" "skill:${skill}"
+    getMachinesByMultipleProperties "getMachinesByDifficulty ${machine_difficulty}" "getMachinesByOS ${machine_os}" "getMachinesBySkill ${skill}"
 fi
 
